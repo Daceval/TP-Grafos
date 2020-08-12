@@ -1,47 +1,66 @@
-#!/usr/bin/python3.
-
 from random import choice
 
 
 class Grafo:
-	''' Grafo dirigido'''
+	''' 
+	TDA Grafo al instanciar una clase de este TDA
+	se recibe como parametro si es un grafo dirigido o no 
+	'''
 
-	def __init__(self):
+	def __init__(self, dirigido):
 		self.vertices = {}
-		#self.cant_vertices = 0
-
+		self.cant_vertices = 0
+		self.es_dirigido = dirigido
 
 	def __iter__(self):
 		return iter(self.vertices)
 
+
+	def __len__(self):
+		return self.cant_vertices
 	
+
 	def agregar_vertice(self, vertice):
 		if vertice in self.vertices:
 			return False 
 		self.vertices[vertice] = {}
-		#self.cant_vertices += 1
+		self.cant_vertices += 1
 		return True
+
 
 	def agregar_arista(self, vert_inicio, vertice_fin, peso = 1):
 		if vert_inicio not in self.vertices or vertice_fin not in self.vertices:
 			raise ValueError("No se puede agregar la arista") 
 			return False
-	
+		
 		adya_inicio = self.vertices.get(vert_inicio, {})
 		adya_inicio[vertice_fin] = peso
 		self.vertices[vert_inicio] = adya_inicio
+		if not self.es_dirigido:
+			adyac_fin = self.vertices.get(vertice_fin, {})
+			adyac_fin[vert_inicio] = peso
+			self.vertices[vertice_fin] = adyac_fin
 		
 		return True
 
-	def sacar_arista(self, desde, hasta):
+
+	def eliminar_arista(self, desde, hasta):
 		if desde not in self.vertices or hasta not in self.vertices:
 			raise ValueError("No se puede sacar una arista")
+			return False
+
 		dict_adyacente = self.vertices.get(desde, {})
 		dict_adyacente.pop(hasta)
 		self.vertices[desde] = dict_adyacente
+		
+		if not es_dirigido:
+			dict_hasta = self.vertices[hasta]
+			dict_hasta.pop(desde)
+			self.vertices[hasta] = dict_hasta
+		return True
 
 
-	def sacar_vertice(self, vertice):
+	def eliminar_vertice(self, vertice):
 		if vertice not in self.vertices:
 			raise ValueError("El vertice no se encuentra en el grafo")
 			return False
@@ -50,6 +69,8 @@ class Grafo:
 		
 		for vertices in self.vertices.values():
 			vertices.pop(vertice, None)
+		self.cant_vertices -= 1
+		
 		return True
 
 
@@ -63,6 +84,7 @@ class Grafo:
 			return False
 		return list(self.vertices[vertice])
 
+
 	def obtener_vertices(self):
 		return list(self.vertices)
 
@@ -73,7 +95,7 @@ class Grafo:
 
 	def peso(self, vertice1, vertice2):
 		dic_aux = self.vertices[vertice1]
-		peso = dic_aux.get(vertice2) # dic_aux[vertice2]
+		peso = dic_aux.get(vertice2, 1) # dic_aux[vertice2]
 		return peso
 
 
