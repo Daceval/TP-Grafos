@@ -12,6 +12,7 @@ class Grafo:
 		self.cant_vertices = 0
 		self.es_dirigido = dirigido
 
+
 	def __iter__(self):
 		return iter(self.vertices)
 
