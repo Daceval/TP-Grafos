@@ -1,6 +1,6 @@
 from grafo import * 
 from collections import deque
-
+import heapq as hp 
 
 def bfs(grafo, inicio):
 	visitados = set()
@@ -56,7 +56,7 @@ def diametro_grafo(grafo):
 	return max_min_dist
 
 
-def ciclo_de_largo_n(grafo, vertice, n, inicio, camino):
+def ciclo(grafo, vertice, n, inicio, camino):
 	print(camino)
 	if vertice == inicio and len(camino) == n:
 		camino.append(inicio)
@@ -69,18 +69,17 @@ def ciclo_de_largo_n(grafo, vertice, n, inicio, camino):
 
 	for w in grafo.adyacentes(vertice):
 		print("adyacente de {} es {} ".format(vertice, w))
-		if ciclo_de_largo_n(grafo, w, n, inicio, camino):
+		if ciclo(grafo, w, n, inicio, camino):
 			return True
 	
 	camino.pop()
 	return False
 
 
-#poner esta funcion en programa netstats
-def ciclo(grafo, v, n):
+def ciclo_de_largo_n(grafo, v, n):
 	list_ciclo = []
 	inicio = v
-	ciclo_de_largo_n(grafo, v, n, inicio, list_ciclo)
+	ciclo(grafo, v, n, inicio, list_ciclo)
 	return list_ciclo
 
 
@@ -193,13 +192,41 @@ if __name__ == "__main__":
 	grafo.agregar_arista("a", "d")
 	grafo.agregar_arista("a", "e")
 
-	rank = pagerank(grafo)
+	# rank = pagerank(grafo)
+	# print("rank: ", rank)
+	# array = [valor for valor in rank.values()]
 	
-	print("page rank: ", rank)
-	comp_conex = cfc(grafo)
-	print("componentes conexas : ", comp_conex)
+	# #print("invertido", dic)
 
+	# heap = [array[x] for x in range(4)]
+	# print("heap al principio", heap, end = "\n")
+	# hp.heapify(heap)
+	# print("heap despues de heapify", heap, end = "\n")
+	# for i in array[4:]:
+	# 	if i > heap[0]:
+	# 		hp.heappop(heap)
+	# 		hp.heappush(heap, i)
 
+	# print("mas grandes", heap[::-1], end = "\n")
+	# print("array original", array)
+	# print("\n")
+	# dic = dict([(v, c) for c, v in rank.items()])
+
+	# for r, p in enumerate(heap[::-1]):
+	# 	print(f'Puesto{r + 1}°', dic[p])
+	#print("page rank: ", rank)
+	# comp_conex = []
+	# comp_conex = cfc(grafo)
+	# pagina = "a"
+	# print("componentes conexas : ", comp_conex)
+	# dicci = {}
+	# for i in range(len(comp_conex)):
+	# 	for j in range(len(comp_conex[i])):
+	# 		dicci[comp_conex[i][j]] = i
+	# print(comp_conex[dicci[pagina]])
+
+	
+				
 
 
 

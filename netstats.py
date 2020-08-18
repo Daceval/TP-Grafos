@@ -1,24 +1,36 @@
+#!/usr/bin/python3.
+
 from collections import deque
 from grafo import Grafo
+from libgraph import * 
 import sys
 import csv
+import heapq as hp
 
 class Net:
 	def __init__(self):
 		self.ops = ['listar_operaciones',
 		'camino',
+		'ciclo',
 		'rango',
 		'navegacion',
-		'clustering']
+		'clustering',
+		'mas_importantes',
+		'conectados']
+
 		self.map = {'camino': self.camino_check,
 		'rango': self.rango_check,
 		'navegacion': self.navegacion_check,
-		'clustering': self.clustering_check
+		'clustering': self.clustering_check,
+		'conectados': self.conectividad_check,
+		'ciclo': self.ciclo_check,
+		'mas_importantes': self.importantes_check
 		}
 
 		self.f = {'navegacion': nav_primer_link,
-		'clustering': coef_clustering
-
+		'clustering': coef_clustering, 'camino': camino_mas_corto
+		'mas_importantes': art_mas_importantes, 'ciclo': ciclo_n_articulos
+		'conectados': conectividad
 		}
 
 
@@ -63,6 +75,15 @@ class Net:
 			p = cmd[1]
 			return [p]
 		return []
+
+	def conectividad_check(self, params):
+		return self.error_n(params, 2)
+
+	def ciclo_check(self, params):
+		return self.error_n(params, 2)
+
+	def importantes_check(self, params):
+		return self.error_n(params, 1)
 
 
 def grafo_init():
@@ -109,7 +130,7 @@ def bfs_var(grafo, inicio, cant, n):
 	cola = deque()
 	cola.append(inicio)
 	while(cola):
-		vertice = cola.popleft()
+		vertice = cola.popleft()error_n
 		for adyac in grafo.adyacentes(vertice):
 			if adyac in visitados:
 				continue
@@ -173,7 +194,53 @@ def input(net, grafo):
 
 
 
+def art_mas_importantes(grafo, params):
+	top_k = params[0]
+	cal_pagerank = pagerank(grafo)
+	rank_values = [valor for valor in cal_pagerank.values()]
+	heap = [rank_values[x] for x in range(top_k)]
+	hp.heapyfi(heap)
+	for rango in rank_values[top_k+1:]:
+		if heap[0] < rango:
+			hp.heappop(heap)
+			hp.heappush(heap, rango)
 
+	dict_rango_pagina = dict([(rank, page) for page, rank in cal_pagerank.items()])
+	for rango in heap[::-1]:
+		print(dict_rango_pagina[rango])
+
+
+def ciclo_n_articulos(grafo, params):
+	inicio = params[0]
+	n = params[1]
+	ciclo_articulos = ciclo_de_largo_n(grafo, inicio, n)
+	
+	if len(ciclo_articulos) == 0:
+		print("No se encontro recorrido")
+	else:
+		print("->".join(ciclo_articulos))
+
+
+def camino_mas_corto(grafo, params):
+	origen = params[0]
+	destino = params[1]
+	camino_min , costo = camino_minimo(grafo, origen, destino)
+	print("->".join(camino_minimo))
+	print(costo)
+
+
+def conectividad(grafo, params):
+	pagina = params[0]
+	index_comp = {}
+	comp_conex = []
+	if len(index_comp) == 0:
+		comp_conex = cfc(grafo)
+		for num_componente in range(len(comp_conex)):	
+			for indice in range(len(comp_conex[num_componente])):
+				index_comp[comp_conex[num_componente][indice]] = num_componente
+
+	print(comp_conex[index_comp[pagina]])
+				
 
 
 def main():
