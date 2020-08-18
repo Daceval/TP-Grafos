@@ -7,6 +7,8 @@ import sys
 import csv
 import heapq as hp
 
+
+
 class Net:
 	def __init__(self):
 		self.ops = ['listar_operaciones',
@@ -16,38 +18,54 @@ class Net:
 		'navegacion',
 		'clustering',
 		'mas_importantes',
-		'conectados']
+		'conectados',
+		'lectura']
 
-		self.map = {'camino': self.camino_check,
+		self.map = {'listar_operaciones': self.listar_check,
+		'camino': self.camino_check,
 		'rango': self.rango_check,
 		'navegacion': self.navegacion_check,
 		'clustering': self.clustering_check,
 		'conectados': self.conectividad_check,
 		'ciclo': self.ciclo_check,
-		'mas_importantes': self.importantes_check
+		'mas_importantes': self.importantes_check,
+		'lectura': self.lectura_check
 		}
 
-		self.f = {'navegacion': nav_primer_link,
-		'clustering': coef_clustering, 'camino': camino_mas_corto
-		'mas_importantes': art_mas_importantes, 'ciclo': ciclo_n_articulos
-		'conectados': conectividad
+		self.f = {'listar_operaciones': self.listar_operaciones,
+		'navegacion': nav_primer_link,
+		'clustering': coef_clustering,
+		'camino': camino_mas_corto,
+		'mas_importantes': art_mas_importantes, 
+		'ciclo': ciclo_n_articulos,
+		'conectados': conectividad,
+		'lectura': lectura_2_am,
+		'rango': todos_en_rango
 		}
 
 
 	def validate(self, op):
+		if not op:
+			print("No se recibió ninguna instrucción.")
+			return None, None
 		cmd = op.split(" ", 1)
-		ok = False
 		if(cmd[0] in self.ops):
-			ok = True
 			p = self.map[cmd[0]](op)
 			if p:
 				return cmd[0], p
-		if not ok:
-			print("No se identificó ningún comando")
+			else:
+				return None, None
+		else:
+			print("El comando '{0}' no es válido." .format(cmd[0]))
+			return None, None
 
 	def error_n(self, params, n):
 		cmd = params.split(" ", 1)
-		if(len(cmd) < n):
+		if len(cmd) > 2 and n == 0:
+			print("Esta operación no requiere parámetros.")
+		if n == 0:
+			return True
+		if(len(cmd) < 2):
 			print("Parámetros no especificados.")
 			return False
 		p = cmd[1].split(",")
@@ -56,6 +74,11 @@ class Net:
 			return False
 		return p
 
+	def listar_operaciones(self, grafo, params):
+		for op in self.ops:
+			if op == 'listar_operaciones':
+				continue
+			print(">" + op)
 
 	def camino_check(self, params):
 		return self.error_n(params, 2)
@@ -85,6 +108,11 @@ class Net:
 	def importantes_check(self, params):
 		return self.error_n(params, 1)
 
+	def lectura_check(self, params):
+		return self.error_n(params, len(params))
+
+	def listar_check(self, params):
+		return self.error_n(params, 0)
 
 def grafo_init():
 	grafo = Grafo(True)
@@ -92,25 +120,40 @@ def grafo_init():
 	src = csv.reader(file, delimiter = '\t')
 	rows = [row for row in src]
 	for row in rows:
+		row[0].strip()
 		grafo.agregar_vertice(row[0])
 	for row in rows:
 		for i in range(1, len(row)):
+			row[i].strip()
 			grafo.agregar_arista(row[0], row[i])
 	file.close()
 	return grafo
 
-# def lectura_2_am(grafo, params):
-# 	camino = []
-# 	visitados  = set()
-# 	for v in params:
-# 		if not grafo.pertenece_vertice(v):
-# 			raise ValueError("El vertice "{0}" no pertenece al grafo" .format(v))
-# 			continue
-# 		visitados.add(v)
-# 		camino.append(v)
-# 		for w in grafo.adyacentes(v):
-# 			if w in params and not in visitados:
-# 				camino.append(w)
+def lectura_2_am(grafo, params):
+	camino = []
+	grados = {}
+	for v in params:
+		grados[v] = 0
+	for v in params:
+		for w in grafo.adyacentes(v):
+			if w in params:
+				grados[w] += 1
+	q = deque()
+	for v in params:
+		if grados[v] == 0:
+			q.append(v)
+	while q:
+		v = q.popleft()
+		camino.append(v)
+		for w in grafo.adyacentes(v):
+			if w in params:
+				grados[w] -= 1
+				if grados[w] == 0:
+					q.append(w)
+	if len(camino) == len(params):
+		return camino
+	else:
+		return None
 
 def todos_en_rango(grafo, params):
 	vertice = params[0]
@@ -119,10 +162,10 @@ def todos_en_rango(grafo, params):
 		print("None")
 	n = int(params[1])
 	cant = 0
-	largo = bfs_var(grafo, vertice, cant, n)
+	largo = largo_bfs_var(grafo, vertice, cant, n)
 	print(largo)
 
-def bfs_var(grafo, inicio, cant, n):
+def largo_bfs_var(grafo, inicio, cant, n):
 	visitados = set()
 	costo = {}
 	visitados.add(inicio)
@@ -130,7 +173,7 @@ def bfs_var(grafo, inicio, cant, n):
 	cola = deque()
 	cola.append(inicio)
 	while(cola):
-		vertice = cola.popleft()error_n
+		vertice = cola.popleft()
 		for adyac in grafo.adyacentes(vertice):
 			if adyac in visitados:
 				continue
@@ -161,8 +204,7 @@ def coef_clustering(grafo, params):
 	if not params:
 		result = clustering_overall(grafo)
 	else:
-		page = params[0]
-		result = clustering_page(grafo, page)
+		result = clustering_page(grafo, params[0])
 	print("{:.3f}" .format(result))
 
 def clustering_overall(grafo):
@@ -190,6 +232,8 @@ def input(net, grafo):
 	for x in sys.stdin:
 		line = x.strip()
 		cmd, params = net.validate(line)
+		if not cmd or not params:
+			continue
 		net.f[cmd](grafo, params)
 
 
@@ -246,6 +290,9 @@ def conectividad(grafo, params):
 def main():
 	net = Net()
 	grafo = grafo_init()
+	# camino = lectura_2_am(grafo,['Hockey sobre hielo', 'Roma', 
+	# 	'Japón', 'árbol', 'Guerra', 'Dios', 'universo', 'Himalaya', 'otoño'])
+	# print(camino)
 	input(net, grafo)
 
 	
