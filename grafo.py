@@ -96,7 +96,7 @@ class Grafo:
 
 	def peso(self, vertice1, vertice2):
 		dic_aux = self.vertices[vertice1]
-		peso = dic_aux.get(vertice2, 1) # dic_aux[vertice2]
+		peso = dic_aux.get(vertice2, 1) 
 		return peso
 
 

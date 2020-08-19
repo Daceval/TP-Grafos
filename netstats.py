@@ -6,7 +6,7 @@ from libgraph import *
 import sys
 import csv
 import heapq as hp
-
+sys.setrecursionlimit(75000)
 
 
 class Net:
@@ -18,6 +18,7 @@ class Net:
 		'navegacion',
 		'clustering',
 		'mas_importantes',
+		'comunidad',
 		'conectados',
 		'lectura']
 
@@ -29,6 +30,7 @@ class Net:
 		'conectados': self.conectividad_check,
 		'ciclo': self.ciclo_check,
 		'mas_importantes': self.importantes_check,
+		'comunidad': self.comunidad_check,
 		'lectura': self.lectura_check
 		}
 
@@ -40,7 +42,8 @@ class Net:
 		'ciclo': ciclo_n_articulos,
 		'conectados': conectividad,
 		'lectura': lectura_2_am,
-		'rango': todos_en_rango
+		'rango': todos_en_rango,
+		'comunidad': comunidades
 		}
 
 
@@ -100,7 +103,7 @@ class Net:
 		return []
 
 	def conectividad_check(self, params):
-		return self.error_n(params, 2)
+		return self.error_n(params, 1)
 
 	def ciclo_check(self, params):
 		return self.error_n(params, 2)
@@ -109,10 +112,16 @@ class Net:
 		return self.error_n(params, 1)
 
 	def lectura_check(self, params):
-		return self.error_n(params, len(params))
+		cmd = params.split(" ", 1)
+		if len(cmd) == 2:
+			p = cmd[1].split(",")
+		return self.error_n(params, len(p))
 
 	def listar_check(self, params):
 		return self.error_n(params, 0)
+
+	def comunidad_check(self, params):
+		return self.error_n(params, 1)
 
 def grafo_init():
 	grafo = Grafo(True)
@@ -153,7 +162,7 @@ def lectura_2_am(grafo, params):
 	if len(camino) == len(params):
 		return camino
 	else:
-		return None
+		print("No existe formada de leer las paginas en orden")
 
 def todos_en_rango(grafo, params):
 	vertice = params[0]
@@ -237,26 +246,31 @@ def input(net, grafo):
 		net.f[cmd](grafo, params)
 
 
-
 def art_mas_importantes(grafo, params):
-	top_k = params[0]
+	top_k = int(params[0])
+	mas_importantes = []
 	cal_pagerank = pagerank(grafo)
+	
 	rank_values = [valor for valor in cal_pagerank.values()]
 	heap = [rank_values[x] for x in range(top_k)]
-	hp.heapyfi(heap)
+	hp.heapify(heap)
+
+	#algoritmo top-k
 	for rango in rank_values[top_k+1:]:
 		if heap[0] < rango:
 			hp.heappop(heap)
 			hp.heappush(heap, rango)
 
 	dict_rango_pagina = dict([(rank, page) for page, rank in cal_pagerank.items()])
-	for rango in heap[::-1]:
-		print(dict_rango_pagina[rango])
+	while heap:
+		rango = hp.heappop(heap)
+		mas_importantes.append(dict_rango_pagina[rango])
+	print(",".join(mas_importantes[::-1]))
 
 
 def ciclo_n_articulos(grafo, params):
 	inicio = params[0]
-	n = params[1]
+	n = int(params[1])
 	ciclo_articulos = ciclo_de_largo_n(grafo, inicio, n)
 	
 	if len(ciclo_articulos) == 0:
@@ -269,7 +283,7 @@ def camino_mas_corto(grafo, params):
 	origen = params[0]
 	destino = params[1]
 	camino_min , costo = camino_minimo(grafo, origen, destino)
-	print("->".join(camino_minimo))
+	print("->".join(camino_min))
 	print(costo)
 
 
@@ -282,17 +296,26 @@ def conectividad(grafo, params):
 		for num_componente in range(len(comp_conex)):	
 			for indice in range(len(comp_conex[num_componente])):
 				index_comp[comp_conex[num_componente][indice]] = num_componente
+	print(",".join(comp_conex[index_comp[pagina]]))
 
-	print(comp_conex[index_comp[pagina]])
-				
+
+def comunidades(grafo, params):
+	pagina = params[0]
+	comunidad_pagina = []
+
+	todas_comunidades = label_propagation(grafo)
+	label_pagina = todas_comunidades[pagina]
+	for pagina, label in todas_comunidades.items():
+		if label == label_pagina:
+			comunidad_pagina.append(pagina)
+
+	print(",".join(comunidad_pagina))
+
 
 
 def main():
 	net = Net()
 	grafo = grafo_init()
-	# camino = lectura_2_am(grafo,['Hockey sobre hielo', 'Roma', 
-	# 	'Japón', 'árbol', 'Guerra', 'Dios', 'universo', 'Himalaya', 'otoño'])
-	# print(camino)
 	input(net, grafo)
 
 	

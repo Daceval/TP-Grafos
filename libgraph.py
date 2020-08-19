@@ -1,5 +1,6 @@
 from grafo import * 
 from collections import deque
+from random import shuffle
 import heapq as hp 
 
 def bfs(grafo, inicio):
@@ -57,18 +58,15 @@ def diametro_grafo(grafo):
 
 
 def ciclo(grafo, vertice, n, inicio, camino):
-	print(camino)
 	if vertice == inicio and len(camino) == n:
 		camino.append(inicio)
-		print("entre")
 		return True
 
-	if len(camino) >= n:
+	if len(camino) >= n or vertice in camino:
 		return False
 	camino.append(vertice)
 
 	for w in grafo.adyacentes(vertice):
-		print("adyacente de {} es {} ".format(vertice, w))
 		if ciclo(grafo, w, n, inicio, camino):
 			return True
 	
@@ -81,6 +79,7 @@ def ciclo_de_largo_n(grafo, v, n):
 	inicio = v
 	ciclo(grafo, v, n, inicio, list_ciclo)
 	return list_ciclo
+
 
 
 def info_links(grafo):
@@ -104,7 +103,7 @@ def info_links(grafo):
 	return links_entrantes, cant_links 
 
 
-def pagerank(web, coef_amortiguacion = 0.85, iteraciones = 100):  
+def pagerank(web, coef_amortiguacion = 0.85, iteraciones = 15):  
 
 	links_entrantes, cant_links = info_links(web)
 	rank = {}
@@ -166,68 +165,39 @@ def componentes_fuertemente_conexas(grafo, v, visitados, pila, apilados, orden, 
 		todas_cfc.append(nueva_cfc)
   
 
-if __name__ == "__main__":
+def max_freq(vertice, vertices_entrantes, labels):
+	if vertices_entrantes.get(vertice, 0) == 0: return labels[vertice]
+	if len(vertices_entrantes[vertice]) == 0: return labels[vertice]
+	entrantes = vertices_entrantes[vertice]
+	dict_frecuencias = {}
+	label_mas_freq = None
+	for x in entrantes:
+		label = labels[x]
+		if not label_mas_freq:
+			label_mas_freq = label
+		dict_frecuencias[label] = dict_frecuencias.get(label, 0) + 1
+		if dict_frecuencias[label] > dict_frecuencias[label_mas_freq]:
+			label_mas_freq = label
+	return label_mas_freq
 
-	grafo = Grafo(True)
-	grafo.agregar_vertice("a")
-	grafo.agregar_vertice("e")
-	grafo.agregar_vertice("q")
-	grafo.agregar_vertice("d")
-	grafo.agregar_vertice("z")
-	grafo.agregar_vertice("p")
-	grafo.agregar_vertice("w")
-	grafo.agregar_vertice("v")
-	grafo.agregar_vertice("t")
 
+def label_propagation(grafo):
+	labels = {}
+	iniciar = 0
+	for v in grafo:
+		labels[v] = iniciar
+		iniciar+=1
 
-	grafo.agregar_arista("d", "e")
-	grafo.agregar_arista("e", "q")
-	grafo.agregar_arista("e", "p")
-	grafo.agregar_arista("e", "z")
-	grafo.agregar_arista("q", "p")
-	grafo.agregar_arista("v", "p")
-	grafo.agregar_arista("p", "t")
-	grafo.agregar_arista("z", "w")
-	grafo.agregar_arista("w", "a")
-	grafo.agregar_arista("a", "d")
-	grafo.agregar_arista("a", "e")
-
-	# rank = pagerank(grafo)
-	# print("rank: ", rank)
-	# array = [valor for valor in rank.values()]
+	vertices_entrantes, cant_entrantes = info_links(grafo)
+	vertices = grafo.obtener_vertices()
+	shuffle(vertices)
+	for i in range(20):
+		for v in vertices:
+			labels[v] = max_freq(v, vertices_entrantes, labels)
 	
-	# #print("invertido", dic)
-
-	# heap = [array[x] for x in range(4)]
-	# print("heap al principio", heap, end = "\n")
-	# hp.heapify(heap)
-	# print("heap despues de heapify", heap, end = "\n")
-	# for i in array[4:]:
-	# 	if i > heap[0]:
-	# 		hp.heappop(heap)
-	# 		hp.heappush(heap, i)
-
-	# print("mas grandes", heap[::-1], end = "\n")
-	# print("array original", array)
-	# print("\n")
-	# dic = dict([(v, c) for c, v in rank.items()])
-
-	# for r, p in enumerate(heap[::-1]):
-	# 	print(f'Puesto{r + 1}°', dic[p])
-	#print("page rank: ", rank)
-	# comp_conex = []
-	# comp_conex = cfc(grafo)
-	# pagina = "a"
-	# print("componentes conexas : ", comp_conex)
-	# dicci = {}
-	# for i in range(len(comp_conex)):
-	# 	for j in range(len(comp_conex[i])):
-	# 		dicci[comp_conex[i][j]] = i
-	# print(comp_conex[dicci[pagina]])
-
+	return labels
 	
 				
-
 
 
 
