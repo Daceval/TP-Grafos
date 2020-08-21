@@ -31,7 +31,7 @@ class Grafo:
 
 	def agregar_arista(self, vert_inicio, vertice_fin, peso = 1):
 		if vert_inicio not in self.vertices or vertice_fin not in self.vertices:
-			raise ValueError("No se puede agregar la arista") 
+			print(f'no se puede agregar la arista desde {vert_inicio} hacia {vertice_fin}')
 			return False
 		
 		adya_inicio = self.vertices.get(vert_inicio, {})
@@ -47,7 +47,7 @@ class Grafo:
 
 	def eliminar_arista(self, desde, hasta):
 		if desde not in self.vertices or hasta not in self.vertices:
-			raise ValueError("No se puede sacar una arista")
+			print(f'no se puede eliminar la arista {desde} hacia {hasta}')
 			return False
 
 		dict_adyacente = self.vertices.get(desde, {})
@@ -63,7 +63,7 @@ class Grafo:
 
 	def eliminar_vertice(self, vertice):
 		if vertice not in self.vertices:
-			raise ValueError("El vertice no se encuentra en el grafo")
+			print(f'el vertice {vertice} no se encuetra en el grafo')
 			return False
 		
 		del self.vertices[vertice]		
@@ -81,7 +81,7 @@ class Grafo:
 
 	def adyacentes(self, vertice):
 		if vertice not in self.vertices:
-			raise ValueError("El vertice no se encuentra en el grafo")
+			print(f'el vertice {vertice} no se encuetra en el grafo')
 			return False
 		return list(self.vertices[vertice])
 

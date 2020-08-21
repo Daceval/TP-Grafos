@@ -1,10 +1,8 @@
-#!/usr/bin/python3.
-
+#!/usr/bin/python3
 from collections import deque
 from grafo import Grafo
 from libgraph import * 
 import sys
-import csv
 import heapq as hp
 sys.setrecursionlimit(75000)
 
@@ -46,6 +44,8 @@ class Net:
 		'comunidad': comunidades
 		}
 
+		self.comp_tiempo_const = {}
+
 
 	def validate(self, op):
 		if not op:
@@ -81,7 +81,7 @@ class Net:
 		for op in self.ops:
 			if op == 'listar_operaciones':
 				continue
-			print(">" + op)
+			print(op)
 
 	def camino_check(self, params):
 		return self.error_n(params, 2)
@@ -123,19 +123,18 @@ class Net:
 	def comunidad_check(self, params):
 		return self.error_n(params, 1)
 
-def grafo_init():
+def grafo_init(ruta):
 	grafo = Grafo(True)
-	file  = open(sys.argv[1])
-	src = csv.reader(file, delimiter = '\t')
-	rows = [row for row in src]
-	for row in rows:
-		row[0].strip()
-		grafo.agregar_vertice(row[0])
-	for row in rows:
-		for i in range(1, len(row)):
-			row[i].strip()
-			grafo.agregar_arista(row[0], row[i])
-	file.close()
+	with open(ruta, 'r') as file:
+		for linea in file:
+			paginas = linea.rstrip("\n").split("\t")
+			grafo.agregar_vertice(paginas[0])
+
+			contador = 1
+			while contador < len(paginas):
+				grafo.agregar_vertice(paginas[contador])
+				grafo.agregar_arista(paginas[0], paginas[contador])
+				contador+=1
 	return grafo
 
 def lectura_2_am(grafo, params):
@@ -159,8 +158,9 @@ def lectura_2_am(grafo, params):
 				grados[w] -= 1
 				if grados[w] == 0:
 					q.append(w)
+
 	if len(camino) == len(params):
-		return camino
+		print(",".join(camino))
 	else:
 		print("No existe formada de leer las paginas en orden")
 
@@ -200,6 +200,7 @@ def nav_primer_link(grafo, params):
 	nav(grafo, origen, cant, camino)
 	print(" -> ".join(camino))
 
+
 def nav(grafo, origen, cant, camino):
 	camino.append(origen)
 	if cant == 20 or origen == 'Filosofía':
@@ -208,6 +209,7 @@ def nav(grafo, origen, cant, camino):
 		return None
 	cant += 1
 	nav(grafo, grafo.adyacentes(origen)[0], cant, camino)
+
 
 def coef_clustering(grafo, params):
 	if not params:
@@ -237,13 +239,18 @@ def clustering_page(grafo, page):
 	div = lenght*(lenght-1)
 	return cant/div
 
+
 def input(net, grafo):
 	for x in sys.stdin:
 		line = x.strip()
 		cmd, params = net.validate(line)
 		if not cmd or not params:
 			continue
-		net.f[cmd](grafo, params)
+		if cmd == 'conectados':
+			componentes = net.comp_tiempo_const
+			net.f[cmd](grafo, params, componentes)
+		else:
+			net.f[cmd](grafo, params)
 
 
 def art_mas_importantes(grafo, params):
@@ -273,30 +280,34 @@ def ciclo_n_articulos(grafo, params):
 	n = int(params[1])
 	ciclo_articulos = ciclo_de_largo_n(grafo, inicio, n)
 	
-	if len(ciclo_articulos) == 0:
-		print("No se encontro recorrido")
-	else:
+	if len(ciclo_articulos) > 0:
 		print("->".join(ciclo_articulos))
+	else:
+		print("No se encontro recorrido")
 
 
 def camino_mas_corto(grafo, params):
 	origen = params[0]
 	destino = params[1]
-	camino_min , costo = camino_minimo(grafo, origen, destino)
-	print("->".join(camino_min))
-	print(costo)
+	cam_min , costo = camino_minimo(grafo, origen, destino)
+	if len(cam_min) == 0:
+		print("No se encontro recorrido")
+	else:
+		print("->".join(cam_min))
+		print(costo)
 
 
-def conectividad(grafo, params):
+def conectividad(grafo, params, comp_conex):
 	pagina = params[0]
-	index_comp = {}
-	comp_conex = []
-	if len(index_comp) == 0:
-		comp_conex = cfc(grafo)
-		for num_componente in range(len(comp_conex)):	
-			for indice in range(len(comp_conex[num_componente])):
-				index_comp[comp_conex[num_componente][indice]] = num_componente
-	print(",".join(comp_conex[index_comp[pagina]]))
+
+	if pagina not in comp_conex:
+		com = cfc(grafo, pagina)
+		for i in range(len(com)):
+			for j in range(len(com[i])):
+				comp_conex[com[i][j]] = com[i]
+
+	print(",".join(comp_conex[pagina]))
+
 
 
 def comunidades(grafo, params):
@@ -310,12 +321,12 @@ def comunidades(grafo, params):
 			comunidad_pagina.append(pagina)
 
 	print(",".join(comunidad_pagina))
-
+	print(len(comunidad_pagina))
 
 
 def main():
 	net = Net()
-	grafo = grafo_init()
+	grafo = grafo_init(sys.argv[1])
 	input(net, grafo)
 
 	

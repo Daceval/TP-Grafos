@@ -3,6 +3,11 @@ from collections import deque
 from random import shuffle
 import heapq as hp 
 
+ITER_LABELS = 15
+DAMPING_FACTOR = 0.85
+ITER_PR = 45 
+
+
 def bfs(grafo, inicio):
 	visitados = set()
 	costo = {}
@@ -28,22 +33,22 @@ def bfs(grafo, inicio):
 
 def camino_minimo(grafo, inicio, fin):
 	camino = []
-	costo = 0
+	costo = None
 	padres, distancia = bfs(grafo, inicio)
 	if fin not in padres:
-		return False
+		return [], costo
 
-	camino.append(fin)
-	seguir = padres.get(fin)
-	while True:
-		if seguir != None: 
-			camino.append(seguir)
-			seguir = padres.get(seguir)
-		else:
-			break
-	costo = distancia[fin]
+	cola = deque()
+	final = fin 
+	while final != inicio:
+		cola.append(final)
+		final = padres[final]
+	while cola:
+		camino.append(cola.pop()) 
+	costo = len(camino)
+	camino.insert(0, inicio)
 
-	return camino[::-1], costo
+	return camino, costo
 
 
 def diametro_grafo(grafo):
@@ -57,17 +62,18 @@ def diametro_grafo(grafo):
 	return max_min_dist
 
 
-def ciclo(grafo, vertice, n, inicio, camino):
-	if vertice == inicio and len(camino) == n:
-		camino.append(inicio)
-		return True
+def ciclo(grafo, vertice, n, inicio, camino, visitados):
+	if len(camino) == n and vertice == inicio:
+			camino.append(inicio)
+			return True
 
-	if len(camino) >= n or vertice in camino:
+	if len(camino) >= n or vertice in visitados:
 		return False
+	
 	camino.append(vertice)
-
+	visitados.add(vertice)
 	for w in grafo.adyacentes(vertice):
-		if ciclo(grafo, w, n, inicio, camino):
+		if ciclo(grafo, w, n, inicio, camino, visitados):
 			return True
 	
 	camino.pop()
@@ -77,9 +83,9 @@ def ciclo(grafo, vertice, n, inicio, camino):
 def ciclo_de_largo_n(grafo, v, n):
 	list_ciclo = []
 	inicio = v
-	ciclo(grafo, v, n, inicio, list_ciclo)
+	visitados = set()
+	ciclo(grafo, v, n, inicio, list_ciclo, visitados)
 	return list_ciclo
-
 
 
 def info_links(grafo):
@@ -103,7 +109,7 @@ def info_links(grafo):
 	return links_entrantes, cant_links 
 
 
-def pagerank(web, coef_amortiguacion = 0.85, iteraciones = 15):  
+def pagerank(web, coef_amortiguacion = DAMPING_FACTOR, iteraciones = ITER_PR):  
 
 	links_entrantes, cant_links = info_links(web)
 	rank = {}
@@ -116,29 +122,26 @@ def pagerank(web, coef_amortiguacion = 0.85, iteraciones = 15):
 			sum_rank = 0
 			inlinks = links_entrantes[pagina]
 			for link in inlinks:
-				sum_rank += coef_amortiguacion * (float(rank.get(link)) / float(cant_links.get(link)))
+				sum_rank += (float(rank.get(link)) / float(cant_links.get(link)))
 	
-			total_rango = ((1 - coef_amortiguacion) / float(len(web))) + sum_rank
+			total_rango = ((1 - coef_amortiguacion) / float(len(web))) + coef_amortiguacion * sum_rank
 			new_rank[pagina] = total_rango
 		rank = new_rank
 
 
 	return rank
 
-def cfc(grafo):
+
+def cfc(grafo, vertice):
 	todas_cfc = []
 	visitados = set()
-	for vertice_inicial in grafo:
-		if vertice_inicial not in visitados:
-			pila = deque()
-			apilados = set()
-			orden = {}
-			mas_bajo = {}
-			mas_bajo[vertice_inicial] = 0
-			orden[vertice_inicial] = 0
-			componentes_fuertemente_conexas(grafo, vertice_inicial, visitados, pila, apilados, orden, mas_bajo, todas_cfc)
+	pila = deque()
+	apilados = set()
+	orden = {}
+	mas_bajo = {}
+	orden[vertice] = 0
+	componentes_fuertemente_conexas(grafo, vertice, visitados, pila, apilados, orden, mas_bajo, todas_cfc)
 	return todas_cfc
-
 
 def componentes_fuertemente_conexas(grafo, v, visitados, pila, apilados, orden, mas_bajo, todas_cfc):
 	visitados.add(v)
@@ -150,11 +153,12 @@ def componentes_fuertemente_conexas(grafo, v, visitados, pila, apilados, orden, 
 		if w not in visitados:
 			orden[w] = orden[v] + 1
 			componentes_fuertemente_conexas(grafo, w, visitados, pila, apilados, orden, mas_bajo, todas_cfc)
-
-		if w in apilados:
 			mas_bajo[v] = min(mas_bajo[v], mas_bajo[w])
-    
-	if orden[v] == mas_bajo[v] and len(pila) > 0:
+
+		elif w in apilados:
+			mas_bajo[v] = min(mas_bajo[v], mas_bajo[w])
+   
+	if orden[v] == mas_bajo[v]:
 		nueva_cfc = []
 		while True:
 			w = pila.popleft()
@@ -162,22 +166,33 @@ def componentes_fuertemente_conexas(grafo, v, visitados, pila, apilados, orden, 
 			nueva_cfc.append(w)
 			if w == v:
 				break
+
 		todas_cfc.append(nueva_cfc)
   
 
 def max_freq(vertice, vertices_entrantes, labels):
-	if vertices_entrantes.get(vertice, 0) == 0: return labels[vertice]
-	if len(vertices_entrantes[vertice]) == 0: return labels[vertice]
+	if vertices_entrantes.get(vertice, 0) == 0: 
+		return labels[vertice]
+
+	if len(vertices_entrantes[vertice]) == 0:
+		return labels[vertice]
+	
 	entrantes = vertices_entrantes[vertice]
 	dict_frecuencias = {}
 	label_mas_freq = None
-	for x in entrantes:
-		label = labels[x]
+
+	for entrante in entrantes:
+		label = labels[entrante]
 		if not label_mas_freq:
 			label_mas_freq = label
-		dict_frecuencias[label] = dict_frecuencias.get(label, 0) + 1
+		if label not in dict_frecuencias:
+			dict_frecuencias[label] = 1
+		else:
+			dict_frecuencias[label] += 1
+
 		if dict_frecuencias[label] > dict_frecuencias[label_mas_freq]:
 			label_mas_freq = label
+	
 	return label_mas_freq
 
 
@@ -191,8 +206,8 @@ def label_propagation(grafo):
 	vertices_entrantes, cant_entrantes = info_links(grafo)
 	vertices = grafo.obtener_vertices()
 	shuffle(vertices)
-	for i in range(20):
-		for v in vertices:
+	for i in range(ITER_LABELS):
+		for v in labels:
 			labels[v] = max_freq(v, vertices_entrantes, labels)
 	
 	return labels
