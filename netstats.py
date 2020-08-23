@@ -103,7 +103,7 @@ class Net:
 		if(len(cmd) == 2):
 			p = cmd[1]
 			return [p]
-		return []
+		return 1
 
 	def conectividad_check(self, params):
 		return self.error_n(params, 1)
@@ -164,11 +164,11 @@ def lectura_2_am(grafo, params):
 				grados[w] -= 1
 				if grados[w] == 0:
 					q.append(w)
-
 	if len(camino) == len(params):
-		print(",".join(camino))
+		camino.reverse()
+		print(", ".join(camino))
 	else:
-		print("No existe formada de leer las paginas en orden")
+		print("No existe forma de leer las paginas en orden")
 
 def todos_en_rango(grafo, params):
 	vertice = params[0]
@@ -218,7 +218,7 @@ def nav(grafo, origen, cant, camino):
 
 
 def coef_clustering(grafo, params):
-	if not params:
+	if params == 1:
 		result = clustering_overall(grafo)
 	else:
 		result = clustering_page(grafo, params[0])
@@ -238,8 +238,12 @@ def clustering_page(grafo, page):
 	if len(grafo.adyacentes(page)) < 2:
 		return 0
 	for w in grafo.adyacentes(page):
-		for v in grafo.adyacentes(page):
-			if grafo.vertices_unidos(v, w):
+		if w == page:
+			continue
+		for v in grafo.adyacentes(w):
+			if v == w:
+				continue
+			if v in grafo.adyacentes(page):
 				cant += 1
 	lenght = len(grafo.adyacentes(page))
 	div = lenght*(lenght-1)
@@ -287,7 +291,7 @@ def ciclo_n_articulos(grafo, params):
 	ciclo_articulos = ciclo_de_largo_n(grafo, inicio, n)
 	
 	if len(ciclo_articulos) > 0:
-		print("->".join(ciclo_articulos))
+		print(" -> ".join(ciclo_articulos))
 	else:
 		print("No se encontro recorrido")
 
@@ -299,7 +303,7 @@ def camino_mas_corto(grafo, params):
 	if len(cam_min) == 0:
 		print("No se encontro recorrido")
 	else:
-		print("->".join(cam_min))
+		print(" -> ".join(cam_min))
 		print(costo)
 
 
@@ -327,8 +331,6 @@ def comunidades(grafo, params):
 
 	print(",".join(comunidad_pagina))
 	print(len(comunidad_pagina))
-
-
 
 
 def diametro(grafo, params):
