@@ -3,7 +3,10 @@ from collections import deque
 from random import shuffle
 import heapq as hp 
 
-ITER_LABELS = 15
+
+import unittest
+
+ITER_LABELS = 25
 DAMPING_FACTOR = 0.85
 ITER_PR = 45 
 
@@ -35,48 +38,55 @@ def camino_minimo(grafo, inicio, fin):
 	camino = []
 	costo = None
 	padres, distancia = bfs(grafo, inicio)
-	if fin not in padres:
+	if fin not in distancia:
 		return [], costo
 
-	cola = deque()
-	final = fin 
-	while final != inicio:
-		cola.append(final)
-		final = padres[final]
-	while cola:
-		camino.append(cola.pop()) 
-	costo = len(camino)
-	camino.insert(0, inicio)
+	seguir = fin 
+	camino.append(seguir)
 
-	return camino, costo
+	while padres[seguir] != None:
+		insertar = padres[seguir]
+		camino.append(insertar)
+		seguir = insertar
+
+	costo = distancia[fin]
+	return camino[::-1], costo
 
 
 def diametro_grafo(grafo):
 	max_min_dist = 0
+	padres = {}
+	costo = {}
 	for vertice in grafo:
 		caminos, distancias = bfs(grafo, vertice)
-		for w in distancias:
-			if distancias[w] > max_min_dist:
-				max_min_dist = distancias[w]
+		if (max(distancias.values()) > max_min_dist):
+			padres = caminos
+			costo = distancias
+			max_min_dist = max(distancias.values())
+
 	
-	return max_min_dist
+	return max_min_dist, padres, costo
 
 
 def ciclo(grafo, vertice, n, inicio, camino, visitados):
-	if len(camino) == n and vertice == inicio:
+	if len(camino) == n:
+		if vertice == inicio:
 			camino.append(inicio)
 			return True
+		return False
 
 	if len(camino) >= n or vertice in visitados:
 		return False
 	
 	camino.append(vertice)
 	visitados.add(vertice)
+
 	for w in grafo.adyacentes(vertice):
 		if ciclo(grafo, w, n, inicio, camino, visitados):
 			return True
 	
 	camino.pop()
+	visitados.remove(vertice)
 	return False
 
 
@@ -88,24 +98,19 @@ def ciclo_de_largo_n(grafo, v, n):
 	return list_ciclo
 
 
+
 def info_links(grafo):
 	links_entrantes = {}
 	cant_links = {} 
 	for pagina in grafo:
-		links = grafo.adyacentes(pagina)
-		if len(links) == 0:
-			cant_links[pagina] = 0
-		for link in links:
-			if link not in links_entrantes:
-				links_entrantes[link] = set()
+		links_entrantes[pagina] = []
+		cant_links[pagina] = 0
 
-			links_entrantes[link].add(pagina)
-			cant_links[pagina] = len(links)
-			
 	for pagina in grafo:
-		if pagina not in links_entrantes:
-			links_entrantes[pagina] = {} 
-	
+		for link in grafo.adyacentes(pagina):
+			links_entrantes[link].append(pagina)
+			cant_links[pagina] += 1
+
 	return links_entrantes, cant_links 
 
 
@@ -132,7 +137,8 @@ def pagerank(web, coef_amortiguacion = DAMPING_FACTOR, iteraciones = ITER_PR):
 	return rank
 
 
-def cfc(grafo, vertice):
+def cfc(grafo):
+	vertice = grafo.vertice_random()
 	todas_cfc = []
 	visitados = set()
 	pila = deque()
@@ -171,8 +177,6 @@ def componentes_fuertemente_conexas(grafo, v, visitados, pila, apilados, orden, 
   
 
 def max_freq(vertice, vertices_entrantes, labels):
-	if vertices_entrantes.get(vertice, 0) == 0: 
-		return labels[vertice]
 
 	if len(vertices_entrantes[vertice]) == 0:
 		return labels[vertice]
@@ -206,17 +210,15 @@ def label_propagation(grafo):
 	vertices_entrantes, cant_entrantes = info_links(grafo)
 	vertices = grafo.obtener_vertices()
 	shuffle(vertices)
+	
 	for i in range(ITER_LABELS):
-		for v in labels:
+		shuffle(vertices)
+		for v in vertices:
 			labels[v] = max_freq(v, vertices_entrantes, labels)
 	
 	return labels
 	
-				
-
-
-
-
+	
 
 
 

@@ -18,6 +18,7 @@ class Net:
 		'mas_importantes',
 		'comunidad',
 		'conectados',
+		'diametro',
 		'lectura']
 
 		self.map = {'listar_operaciones': self.listar_check,
@@ -29,7 +30,8 @@ class Net:
 		'ciclo': self.ciclo_check,
 		'mas_importantes': self.importantes_check,
 		'comunidad': self.comunidad_check,
-		'lectura': self.lectura_check
+		'lectura': self.lectura_check,
+		'diametro': self.diametro_check
 		}
 
 		self.f = {'listar_operaciones': self.listar_operaciones,
@@ -41,7 +43,8 @@ class Net:
 		'conectados': conectividad,
 		'lectura': lectura_2_am,
 		'rango': todos_en_rango,
-		'comunidad': comunidades
+		'comunidad': comunidades,
+		'diametro': diametro
 		}
 
 		self.comp_tiempo_const = {}
@@ -122,6 +125,9 @@ class Net:
 
 	def comunidad_check(self, params):
 		return self.error_n(params, 1)
+
+	def diametro_check(self, params):
+		return self.error_n(params, 0)
 
 def grafo_init(ruta):
 	grafo = Grafo(True)
@@ -301,13 +307,12 @@ def conectividad(grafo, params, comp_conex):
 	pagina = params[0]
 
 	if pagina not in comp_conex:
-		com = cfc(grafo, pagina)
+		com = cfc(grafo)
 		for i in range(len(com)):
 			for j in range(len(com[i])):
 				comp_conex[com[i][j]] = com[i]
 
 	print(",".join(comp_conex[pagina]))
-
 
 
 def comunidades(grafo, params):
@@ -324,9 +329,40 @@ def comunidades(grafo, params):
 	print(len(comunidad_pagina))
 
 
+
+
+def diametro(grafo, params):
+	max_diametro, padres, costo = diametro_grafo(grafo)
+	camino = []
+	inicio = 0
+	fin = 0
+	for vertice in padres.keys():
+		if padres[vertice] is None:
+			inicio = vertice
+		if costo[vertice] is max_diametro:
+			fin = vertice
+
+	seguir = fin 
+	camino.append(seguir)
+
+	while padres[seguir] != None:
+		insertar = padres[seguir]
+		camino.append(insertar)
+		seguir = insertar
+
+	print("->".join(camino[::-1]))
+	print(max_diametro)
+
+
 def main():
 	net = Net()
 	grafo = grafo_init(sys.argv[1])
+	#palabras = 0
+	#with open(sys.argv[2], "r") as file:
+		#for linea in file:
+			#lista = linea.rstrip("\n").split(",")
+			#palabras += len(lista)
+	#print(palabras)
 	input(net, grafo)
 
 	
