@@ -240,4 +240,4 @@ de la consigna. Debe compilar sin advertencias y correr sin errores de memoria.<
 <li>el código de la solución del TP.</li>
 </ul>
 <p>La entrega se realiza en forma digital a través del <a href="%7B%7Bsite.entregas%7D%7D">sistema de entregas</a>,
-con todos los archivos mencionados en un único archivo ZI</p>
+con todos los archivos mencionados en un único archivo .zip</p>
