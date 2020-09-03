@@ -1,11 +1,10 @@
 from random import choice
 
-
 class Grafo:
 	''' 
 	TDA Grafo al instanciar una clase de este TDA
 	se recibe como parametro si es un grafo dirigido o no 
-	'''
+	indicandolo con un booleano'''
 
 	def __init__(self, dirigido):
 		self.vertices = {}
@@ -54,7 +53,7 @@ class Grafo:
 		dict_adyacente.pop(hasta)
 		self.vertices[desde] = dict_adyacente
 		
-		if not es_dirigido:
+		if not self.es_dirigido:
 			dict_hasta = self.vertices[hasta]
 			dict_hasta.pop(desde)
 			self.vertices[hasta] = dict_hasta

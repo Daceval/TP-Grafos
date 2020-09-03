@@ -282,7 +282,7 @@ def art_mas_importantes(grafo, params):
 	while heap:
 		rango = hp.heappop(heap)
 		mas_importantes.append(dict_rango_pagina[rango])
-	print(",".join(mas_importantes[::-1]))
+	print(", ".join(mas_importantes[::-1]))
 
 
 def ciclo_n_articulos(grafo, params):
@@ -316,7 +316,7 @@ def conectividad(grafo, params, comp_conex):
 			for j in range(len(com[i])):
 				comp_conex[com[i][j]] = com[i]
 
-	print(",".join(comp_conex[pagina]))
+	print(", ".join(comp_conex[pagina]))
 
 
 def comunidades(grafo, params):
@@ -329,8 +329,7 @@ def comunidades(grafo, params):
 		if label == label_pagina:
 			comunidad_pagina.append(pagina)
 
-	print(",".join(comunidad_pagina))
-	print(len(comunidad_pagina))
+	print(", ".join(comunidad_pagina))
 
 
 def diametro(grafo, params):
@@ -352,19 +351,12 @@ def diametro(grafo, params):
 		camino.append(insertar)
 		seguir = insertar
 
-	print("->".join(camino[::-1]))
-	print(max_diametro)
-
+	print(" -> ".join(camino[::-1]))
+	print("Costo:", max_diametro)
 
 def main():
 	net = Net()
 	grafo = grafo_init(sys.argv[1])
-	#palabras = 0
-	#with open(sys.argv[2], "r") as file:
-		#for linea in file:
-			#lista = linea.rstrip("\n").split(",")
-			#palabras += len(lista)
-	#print(palabras)
 	input(net, grafo)
 
 	

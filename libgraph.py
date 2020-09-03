@@ -1,10 +1,7 @@
-from grafo import * 
+from grafo import *
 from collections import deque
 from random import shuffle
 import heapq as hp 
-
-
-import unittest
 
 ITER_LABELS = 25
 DAMPING_FACTOR = 0.85
@@ -211,14 +208,11 @@ def label_propagation(grafo):
 	vertices = grafo.obtener_vertices()
 	shuffle(vertices)
 	
-	for i in range(ITER_LABELS):
+	for _ in range(ITER_LABELS):
 		shuffle(vertices)
 		for v in vertices:
 			labels[v] = max_freq(v, vertices_entrantes, labels)
 	
 	return labels
-	
-	
-
 
 
